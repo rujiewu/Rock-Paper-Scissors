@@ -149,7 +149,7 @@ if __name__ == '__main__':
     im_width, im_height = (cap.get(3), cap.get(4))
     num_hands_detect = 1
     font = cv2.FONT_HERSHEY_COMPLEX
-
+    flag = False
     while True:
         ret, image_np = cap.read()
         image_np = cv2.flip(image_np, 3)
@@ -163,54 +163,37 @@ if __name__ == '__main__':
 
         roi = detector_utils.draw_box_on_image(
             num_hands_detect, args.score_thresh, scores, boxes, im_width, im_height, image_np)
-        print("1******************")
-        print(type(roi))
-        print("2******************")
-        print(roi.shape)
-        print("3******************")
-        print(roi)
-        print("4******************")
-        print(cv2.COLOR_BGR2HSV)
-        print("5******************")
-        #roi不能为null
-        #hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-        #hsv = cv2.cvtColor(None, 40)
-        #hsv = 1
+
         try:
             hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-            #flag = True
+            mask = cv2.inRange(hsv, low_range, upper_range)
+            erosion = cv2.erode(mask, kernel_ellipse, iterations=1)
+            dilation = cv2.dilate(erosion, kernel_ellipse, iterations=1)
+            gaussianBlur = cv2.GaussianBlur(dilation, (15, 15), 1)
+            res = cv2.bitwise_and(roi, roi, mask=gaussianBlur)
+            res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
+            rx, ry = res.shape
+            if rx > 0 and ry > 0:
+                res = cv2.resize(res, (width, height), interpolation=cv2.INTER_CUBIC)
+
+            if ret == True:
+                if rx > 0 and ry > 0:
+                    skinMask(res)
+            flag = True
+            #print(flag)
         except:
             print("Did not detect hand, put hand within the camera's frame!")
+            continue
         #sys.exit(0)
 
-        #if flag == True:
-        mask = cv2.inRange(hsv, low_range, upper_range)
-        erosion = cv2.erode(mask, kernel_ellipse, iterations=1)
-        dilation = cv2.dilate(erosion, kernel_ellipse, iterations=1)
-        gaussianBlur = cv2.GaussianBlur(dilation, (15, 15), 1)
-        res = cv2.bitwise_and(roi, roi, mask=gaussianBlur)
-        res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-        rx, ry = res.shape
-        if rx > 0 and ry > 0:
-            res = cv2.resize(res, (width, height), interpolation=cv2.INTER_CUBIC)
-
-        if ret == True:
-            if rx > 0 and ry > 0:
-                skinMask(res)
-
-        num_frames += 1
-        elapsed_time = (datetime.datetime.now() -
-                        start_time).total_seconds()
-        fps = num_frames / elapsed_time
-
         if (args.display > 0):
-            cv2.putText(image_np,output[retgesture],(15,40),font,0.75, (77, 255, 9), 2)
+            if flag == True:
+                cv2.putText(image_np,output[retgesture],(15,40),font,0.75, (77, 255, 9), 2)
             if (args.fps > 0):
                 detector_utils.draw_fps_on_image(None, image_np)
 
-            cv2.imshow('Single Threaded Detection', cv2.cvtColor(
-                image_np, cv2.COLOR_RGB2BGR))
-            cv2.moveWindow('Single Threaded Detection',0,0)
+            cv2.imshow('RPS', cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
+            cv2.moveWindow('RPS',0,0)
             if cv2.waitKey(5) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
                 break
