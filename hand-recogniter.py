@@ -44,6 +44,12 @@ output = ["Scissors","Scissors","Others","Others","Rock","Others","Others","Othe
 
 detection_graph, sess = detector_utils.load_inference_graph()
 global roi
+#0 others, 1 Rock, 2 Papers, 3 scis
+global gesture_identifier
+gesture_identifier = 0
+
+def getIdentifier():
+    return gesture_identifier
 
 def guessGesture(model, img):
     global output, get_output
@@ -150,6 +156,7 @@ if __name__ == '__main__':
     num_hands_detect = 1
     font = cv2.FONT_HERSHEY_COMPLEX
     flag = False
+    
     while True:
         ret, image_np = cap.read()
         image_np = cv2.flip(image_np, 3)
@@ -191,9 +198,20 @@ if __name__ == '__main__':
                 cv2.putText(image_np,output[retgesture],(15,40),font,0.75, (77, 255, 9), 2)
             if (args.fps > 0):
                 detector_utils.draw_fps_on_image(None, image_np)
-
+            if flag == True:
+                if retgesture == 4 or retgesture == 14:
+                    gesture_identifier = 1
+                elif retgesture == 12 or retgesture == 13:
+                    gesture_identifier = 2
+                elif retgesture == 0 or retgesture == 1 or retgesture == 8 or retgesture == 9 or retgesture == 10 or retgesture == 15:
+                    gesture_identifier = 3
+                else:
+                    gesture_identifier = 0
+            
+            print(gesture_identifier)
             cv2.imshow('RPS', cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
             cv2.moveWindow('RPS',0,0)
             if cv2.waitKey(5) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
                 break
+
