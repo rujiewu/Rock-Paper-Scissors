@@ -38,8 +38,8 @@ gestname = ""
 path = ""
 mod = 0
 fname = "hg21.hdf5"
-output = ["R_Yech","L_Rock","L_Good","L_Six","R_Fist","L_Four","L_Ok","R_No.1","L_Yech","R_Rock",
-          "L_Eight","R_Four","L_Five","R_Five","L_Fist","R_Eight","R_Good","L_No.1","R_Six","R_Ok"]
+output = ["Scissors_R","Scissors_L1","Others","Others","R_Rock","Others","Others","Others","Scissors_L","Scissors_R1",
+          "L2_Scissors","Others","L_Paper","R_Paper","L_Rock","R2_Scissors","Others","Others","Others","Others"]
 
 detection_graph, sess = detector_utils.load_inference_graph()
 global roi
@@ -64,7 +64,7 @@ def guessGesture(model, img):
     d[guess] = 100
     prob  = d[guess]
 
-    if prob > 70.0:
+    if prob > 80.0:
         return output.index(guess)
     else:
         return 1
@@ -189,7 +189,7 @@ if __name__ == '__main__':
             cv2.putText(image_np,output[retgesture],(20,80),font,0.75, (77, 255, 9), 2)
             if (args.fps > 0):
                 detector_utils.draw_fps_on_image(
-                    "FPS : " + str(int(fps)), image_np)
+                    "FPS : 10" + str(int(fps)), image_np)
 
             cv2.imshow('Single Threaded Detection', cv2.cvtColor(
                 image_np, cv2.COLOR_RGB2BGR))
