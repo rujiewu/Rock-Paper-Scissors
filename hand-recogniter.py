@@ -15,6 +15,7 @@ import os
 from PIL import Image
 import json
 import operator
+import sys
 
 img_rows, img_cols = 200, 200
 img_channels = 1
@@ -38,8 +39,8 @@ gestname = ""
 path = ""
 mod = 0
 fname = "hg21.hdf5"
-output = ["Scissors_R","Scissors_L1","Others","Others","R_Rock","Others","Others","Others","Scissors_L","Scissors_R1",
-          "L2_Scissors","Others","L_Paper","R_Paper","L_Rock","R2_Scissors","Others","Others","Others","Others"]
+output = ["Scissors","Scissors","Others","Others","Rock","Others","Others","Others","Scissors","Scissors",
+          "Scissors","Others","Paper","Paper","Rock","Scissors","Others","Others","Others","Others"]
 
 detection_graph, sess = detector_utils.load_inference_graph()
 global roi
@@ -64,7 +65,7 @@ def guessGesture(model, img):
     d[guess] = 100
     prob  = d[guess]
 
-    if prob > 80.0:
+    if prob > 60.0:
         return output.index(guess)
     else:
         return 1
@@ -137,7 +138,6 @@ if __name__ == '__main__':
                         default=5, help='Size of the queue.')
     args = parser.parse_args()
 
-    print("加载ResNet-Hand预训练模型")
     mod = loadCNN()
 
     cap = cv2.VideoCapture(args.video_source)
@@ -163,15 +163,33 @@ if __name__ == '__main__':
 
         roi = detector_utils.draw_box_on_image(
             num_hands_detect, args.score_thresh, scores, boxes, im_width, im_height, image_np)
+        print("1******************")
+        print(type(roi))
+        print("2******************")
+        print(roi.shape)
+        print("3******************")
+        print(roi)
+        print("4******************")
+        print(cv2.COLOR_BGR2HSV)
+        print("5******************")
+        #roi不能为null
+        #hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        #hsv = cv2.cvtColor(None, 40)
+        #hsv = 1
+        try:
+            hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+            #flag = True
+        except:
+            print("Did not detect hand, put hand within the camera's frame!")
+        #sys.exit(0)
 
-        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        #if flag == True:
         mask = cv2.inRange(hsv, low_range, upper_range)
         erosion = cv2.erode(mask, kernel_ellipse, iterations=1)
         dilation = cv2.dilate(erosion, kernel_ellipse, iterations=1)
         gaussianBlur = cv2.GaussianBlur(dilation, (15, 15), 1)
         res = cv2.bitwise_and(roi, roi, mask=gaussianBlur)
         res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-
         rx, ry = res.shape
         if rx > 0 and ry > 0:
             res = cv2.resize(res, (width, height), interpolation=cv2.INTER_CUBIC)
@@ -186,10 +204,9 @@ if __name__ == '__main__':
         fps = num_frames / elapsed_time
 
         if (args.display > 0):
-            cv2.putText(image_np,output[retgesture],(20,80),font,0.75, (77, 255, 9), 2)
+            cv2.putText(image_np,output[retgesture],(15,40),font,0.75, (77, 255, 9), 2)
             if (args.fps > 0):
-                detector_utils.draw_fps_on_image(
-                    "FPS : 10" + str(int(fps)), image_np)
+                detector_utils.draw_fps_on_image(None, image_np)
 
             cv2.imshow('Single Threaded Detection', cv2.cvtColor(
                 image_np, cv2.COLOR_RGB2BGR))
