@@ -109,6 +109,34 @@ class HandRecognizer(object):
         return detector_utils.draw_box_on_image(
             num_hands_detect, args.score_thresh, scores, boxes, im_width, im_height, image_np)
 
+    @staticmethod
+    def image_preprocess(image_np):
+        image_np = cv2.flip(image_np, 3)
+        image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+        boxes, scores = model.detect()
+        roi = model.draw_result(boxes, scores)
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, model.config.low_range, model.config.upper_range)
+        erosion = cv2.erode(mask, model.config.kernel_ellipse, iterations=1)
+        dilation = cv2.dilate(erosion, model.config.kernel_ellipse, iterations=1)
+        gaussianBlur = cv2.GaussianBlur(dilation, (15, 15), 1)
+        res = cv2.bitwise_and(roi, roi, mask=gaussianBlur)
+        res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
+        rx, ry = res.shape
+        if rx > 0 and ry > 0:
+            res = cv2.resize(res, (model.config.width, model.config.height), interpolation=cv2.INTER_CUBIC)
+        return res
+
+    @staticmethod
+    def gesture_postprocess(retgesture):
+        if retgesture == 4 or retgesture == 14:
+            return 1
+        elif retgesture == 12 or retgesture == 13:
+            return 2
+        elif retgesture == 0 or retgesture == 1 or retgesture == 8 or retgesture == 9 or retgesture == 10 or retgesture == 15:
+            return 3
+        return 0
+
 
 if __name__ == '__main__':
 
@@ -147,48 +175,20 @@ if __name__ == '__main__':
     while True:
         try:
             ret, image_np = cap.read()
-            image_np = cv2.flip(image_np, 3)
-            image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-            boxes, scores = model.detect()
-            roi = model.draw_result(boxes, scores)
-            hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-            mask = cv2.inRange(hsv, model.config.low_range, model.config.upper_range)
-            erosion = cv2.erode(mask, model.config.kernel_ellipse, iterations=1)
-            dilation = cv2.dilate(erosion, model.config.kernel_ellipse, iterations=1)
-            gaussianBlur = cv2.GaussianBlur(dilation, (15, 15), 1)
-            res = cv2.bitwise_and(roi, roi, mask=gaussianBlur)
-            res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-            rx, ry = res.shape
-            if rx > 0 and ry > 0:
-                res = cv2.resize(res, (model.config.width, model.config.height), interpolation=cv2.INTER_CUBIC)
-
             if ret:
-                if rx > 0 and ry > 0:
-                    retgesture = model.guess_gesture(res)
+                retgesture = model.guess_gesture(model.image_preprocess(image_np))
             flag = True
-            # print(flag)
         except Exception as err:
-            print(err)
             print("Did not detect hand, put hand within the camera's frame!")
             continue
-        # sys.exit(0)
 
-        if (args.display > 0):
-            if flag == True:
+        if args.display > 0:
+            if flag:
                 cv2.putText(image_np, model.config.output[retgesture], (15, 40), font, 0.75, (77, 255, 9), 2)
-            if (args.fps > 0):
+            if args.fps > 0:
                 detector_utils.draw_fps_on_image(None, image_np)
-            if flag == True:
-                if retgesture == 4 or retgesture == 14:
-                    gesture_identifier = 1
-                elif retgesture == 12 or retgesture == 13:
-                    gesture_identifier = 2
-                elif retgesture == 0 or retgesture == 1 or retgesture == 8 or retgesture == 9 or retgesture == 10 or retgesture == 15:
-                    gesture_identifier = 3
-                else:
-                    gesture_identifier = 0
 
-            print(gesture_identifier)
+            print(model.gesture_postprocess(retgesture))
             cv2.imshow('RPS', cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
             cv2.moveWindow('RPS', 0, 0)
             if cv2.waitKey(5) & 0xFF == ord('q'):
