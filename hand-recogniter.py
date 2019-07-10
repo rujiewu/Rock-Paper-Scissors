@@ -208,7 +208,7 @@ if __name__ == '__main__':
                 else:
                     gesture_identifier = 0
             
-            print(gesture_identifier)
+            #print(gesture_identifier)
             cv2.imshow('RPS', cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
             cv2.moveWindow('RPS',0,0)
             if cv2.waitKey(5) & 0xFF == ord('q'):

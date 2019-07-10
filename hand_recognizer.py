@@ -149,7 +149,10 @@ if __name__ == '__main__':
     while True:
         ret, image_np = cap.read()
         image_np = cv2.flip(image_np, 3)
-        image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+        try:
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+        except:
+            print("Error converting to RGB")
         boxes, scores = model.detect()
         roi = model.draw_result(boxes, scores)
 
