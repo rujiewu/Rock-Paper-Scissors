@@ -73,9 +73,7 @@ class HandRecognizer(object):
         self.roi = 0
         # 0 others, 1 Rock, 2 Papers, 3 scis
         self.gesture_identifier = 0
-
-    def get_output(self):
-        return K.function([self.model.layers[0].input, K.learning_phase()], [self.layer.output, ])
+        self.get_output = K.function([self.model.layers[0].input, K.learning_phase()], [self.layer.output, ])
 
     def get_identifier(self):
         return self.gesture_identifier
@@ -147,13 +145,12 @@ if __name__ == '__main__':
     flag = False
 
     while True:
-        ret, image_np = cap.read()
-        image_np = cv2.flip(image_np, 3)
-        image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-        boxes, scores = model.detect()
-        roi = model.draw_result(boxes, scores)
-
         try:
+            ret, image_np = cap.read()
+            image_np = cv2.flip(image_np, 3)
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+            boxes, scores = model.detect()
+            roi = model.draw_result(boxes, scores)
             hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
             mask = cv2.inRange(hsv, model.config.low_range, model.config.upper_range)
             erosion = cv2.erode(mask, model.config.kernel_ellipse, iterations=1)
@@ -165,12 +162,13 @@ if __name__ == '__main__':
             if rx > 0 and ry > 0:
                 res = cv2.resize(res, (model.config.width, model.config.height), interpolation=cv2.INTER_CUBIC)
 
-            if ret == True:
+            if ret:
                 if rx > 0 and ry > 0:
                     retgesture = model.guess_gesture(res)
             flag = True
             # print(flag)
-        except:
+        except Exception as err:
+            print(err)
             print("Did not detect hand, put hand within the camera's frame!")
             continue
         # sys.exit(0)
