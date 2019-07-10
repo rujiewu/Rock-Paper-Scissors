@@ -101,8 +101,8 @@ class HandRecognizer(object):
         else:
             return 1
 
-    def detect(self):
-        return detector_utils.detect_objects(image_np, self.detection_graph, self.sess)
+    def detect(self, image):
+        return detector_utils.detect_objects(image, self.detection_graph, self.sess)
 
     @staticmethod
     def draw_result(boxes, scores):
@@ -110,10 +110,8 @@ class HandRecognizer(object):
             num_hands_detect, args.score_thresh, scores, boxes, im_width, im_height, image_np)
 
     @staticmethod
-    def image_preprocess(image_np):
-        image_np = cv2.flip(image_np, 3)
-        image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-        boxes, scores = model.detect()
+    def image_preprocess(image):
+        boxes, scores = model.detect(image)
         roi = model.draw_result(boxes, scores)
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, model.config.low_range, model.config.upper_range)
@@ -189,7 +187,7 @@ if __name__ == '__main__':
                 detector_utils.draw_fps_on_image(None, image_np)
 
             print(model.gesture_postprocess(retgesture))
-            cv2.imshow('RPS', cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
+            cv2.imshow('RPS', image_np)
             cv2.moveWindow('RPS', 0, 0)
             if cv2.waitKey(5) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
