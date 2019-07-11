@@ -102,24 +102,22 @@ class HandRecognizer(object):
         return detector_utils.detect_objects(image, self.detection_graph, self.sess)
 
     @staticmethod
-    def draw_result(boxes, scores, score_thresh=0.2):
-        return detector_utils.draw_box_on_image(
-            num_hands_detect, score_thresh, scores, boxes, im_width, im_height, image_np)
+    def draw_result(image_np, boxes, scores, score_thresh=0.2, im_width=640, im_height=480):
+        return detector_utils.draw_box_on_image(1, score_thresh, scores, boxes, im_width, im_height, image_np)
 
-    @staticmethod
-    def image_preprocess(image):
-        boxes, scores = model.detect(image)
-        roi = model.draw_result(boxes, scores)
+    def image_preprocess(self, image):
+        boxes, scores = self.detect(image)
+        roi = self.draw_result(image, boxes, scores)
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, model.config.low_range, model.config.upper_range)
-        erosion = cv2.erode(mask, model.config.kernel_ellipse, iterations=1)
-        dilation = cv2.dilate(erosion, model.config.kernel_ellipse, iterations=1)
+        mask = cv2.inRange(hsv, self.config.low_range, self.config.upper_range)
+        erosion = cv2.erode(mask, self.config.kernel_ellipse, iterations=1)
+        dilation = cv2.dilate(erosion, self.config.kernel_ellipse, iterations=1)
         gaussianBlur = cv2.GaussianBlur(dilation, (15, 15), 1)
         res = cv2.bitwise_and(roi, roi, mask=gaussianBlur)
         res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
         rx, ry = res.shape
         if rx > 0 and ry > 0:
-            res = cv2.resize(res, (model.config.width, model.config.height), interpolation=cv2.INTER_CUBIC)
+            res = cv2.resize(res, (self.config.width, self.config.height), interpolation=cv2.INTER_CUBIC)
         return res
 
     @staticmethod
@@ -132,6 +130,12 @@ class HandRecognizer(object):
             return 3
         return 0
 
+    def classify(self, image):
+        image = self.image_preprocess(image)
+        gesture = self.guess_gesture(image)
+        result = self.gesture_postprocess(gesture)
+        return image, result
+
 
 if __name__ == '__main__':
     model = HandRecognizer()
@@ -141,7 +145,6 @@ if __name__ == '__main__':
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     im_width, im_height = (cap.get(3), cap.get(4))
-    num_hands_detect = 1
     font = cv2.FONT_HERSHEY_COMPLEX
 
     while True:

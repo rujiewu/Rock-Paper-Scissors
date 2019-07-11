@@ -19,6 +19,7 @@ model = algorithm.HandRecognizer()
 
 
 def detect(image):
+    global model
     image = model.image_preprocess(image)
     gesture = model.guess_gesture(image)
     result = model.gesture_postprocess(gesture)
