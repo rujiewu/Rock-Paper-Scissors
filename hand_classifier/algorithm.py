@@ -1,7 +1,6 @@
-import argparse
 import datetime
 import operator
-
+import os
 import cv2
 import numpy as np
 from keras import backend as K
@@ -34,7 +33,7 @@ class Config(object):
 
 
 class HandRecognizer(object):
-    def __init__(self, config=Config, model_dir="hg21.hdf5"):
+    def __init__(self, config=Config, model_dir=os.path.join(os.path.dirname(__file__) + '/hg21.hdf5')):
         self.config = config
         self.detection_graph, self.sess = detector_utils.load_inference_graph()
         input_sensor = Input(shape=(self.config.img_rows, self.config.img_cols, self.config.img_channels))
@@ -103,9 +102,9 @@ class HandRecognizer(object):
         return detector_utils.detect_objects(image, self.detection_graph, self.sess)
 
     @staticmethod
-    def draw_result(boxes, scores):
+    def draw_result(boxes, scores, score_thresh=0.2):
         return detector_utils.draw_box_on_image(
-            num_hands_detect, args.score_thresh, scores, boxes, im_width, im_height, image_np)
+            num_hands_detect, score_thresh, scores, boxes, im_width, im_height, image_np)
 
     @staticmethod
     def image_preprocess(image):
@@ -135,58 +134,30 @@ class HandRecognizer(object):
 
 
 if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-sth', '--scorethreshold', dest='score_thresh', type=float,
-                        default=0.2, help='Score threshold for displaying bounding boxes')
-    parser.add_argument('-fps', '--fps', dest='fps', type=int,
-                        default=1, help='Show FPS on detection/display visualization')
-    parser.add_argument('-src', '--source', dest='video_source',
-                        default=0, help='Device index of the camera.')
-    parser.add_argument('-wd', '--width', dest='width', type=int,
-                        default=640, help='Width of the frames in the video stream.')
-    parser.add_argument('-ht', '--height', dest='height', type=int,
-                        default=480, help='Height of the frames in the video stream.')
-    parser.add_argument('-ds', '--display', dest='display', type=int,
-                        default=1, help='Display the detected images using OpenCV. This reduces FPS')
-    parser.add_argument('-num-w', '--num-workers', dest='num_workers', type=int,
-                        default=4, help='Number of workers.')
-    parser.add_argument('-q-size', '--queue-size', dest='queue_size', type=int,
-                        default=5, help='Size of the queue.')
-    args = parser.parse_args()
-
     model = HandRecognizer()
 
-    cap = cv2.VideoCapture(args.video_source)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    start_time = datetime.datetime.now()
-    num_frames = 0
     im_width, im_height = (cap.get(3), cap.get(4))
     num_hands_detect = 1
     font = cv2.FONT_HERSHEY_COMPLEX
-    flag = False
 
     while True:
         try:
             ret, image_np = cap.read()
             if ret:
                 retgesture = model.guess_gesture(model.image_preprocess(image_np))
-            flag = True
+                cv2.putText(image_np, model.config.output[retgesture], (15, 40), font, 0.75, (77, 255, 9), 2)
+                detector_utils.draw_fps_on_image(None, image_np)
+                print(model.gesture_postprocess(retgesture))
+                cv2.imshow('RPS', image_np)
+                cv2.moveWindow('RPS', 0, 0)
+                if cv2.waitKey(5) & 0xFF == ord('q'):
+                    cv2.destroyAllWindows()
+                    break
         except Exception as err:
+            print(err)
             print("Did not detect hand, put hand within the camera's frame!")
             continue
-
-        if args.display > 0:
-            if flag:
-                cv2.putText(image_np, model.config.output[retgesture], (15, 40), font, 0.75, (77, 255, 9), 2)
-            if args.fps > 0:
-                detector_utils.draw_fps_on_image(None, image_np)
-
-            print(model.gesture_postprocess(retgesture))
-            cv2.imshow('RPS', image_np)
-            cv2.moveWindow('RPS', 0, 0)
-            if cv2.waitKey(5) & 0xFF == ord('q'):
-                cv2.destroyAllWindows()
-                break
