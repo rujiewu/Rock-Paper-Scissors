@@ -11,14 +11,5 @@ font = cv2.FONT_HERSHEY_COMPLEX
 while True:
     ret, frame = cap.read()
     if ret:
-        image, result = hand_classifier.detect(frame)
+        result = hand_classifier.detect(frame)
         print(result)
-        cv2.imshow('RPS', image)
-        cv2.moveWindow('RPS', 0, 0)
-        if cv2.waitKey(5) & 0xFF == ord('q'):
-            cv2.destroyAllWindows()
-            break
-
-
-
-

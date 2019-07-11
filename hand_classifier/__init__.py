@@ -23,4 +23,4 @@ def detect(image):
     image = model.image_preprocess(image)
     gesture = model.guess_gesture(image)
     result = model.gesture_postprocess(gesture)
-    return image, result
+    return result
