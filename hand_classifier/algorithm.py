@@ -32,7 +32,7 @@ class Config(object):
 
 
 class HandRecognizer(object):
-    def __init__(self, config=Config(), model_dir=os.path.join(os.path.dirname(__file__) + '/hg21.hdf5')):
+    def __init__(self, config=Config(), model_dir=os.path.join(os.path.dirname(__file__) + './weights/weights.hdf5')):
         self.config = config
         self.detection_graph, self.sess = detector_utils.load_inference_graph()
         input_sensor = Input(shape=(self.config.img_rows, self.config.img_cols, self.config.img_channels))
