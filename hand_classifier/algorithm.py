@@ -79,8 +79,8 @@ class HandRecognizer(object):
         image = image.reshape(self.config.img_rows, self.config.img_cols, self.config.img_channels)
         image = image.astype('float32')
         image = image / 255
-        rimage = image.reshape(1, self.config.img_rows, self.config.img_cols, self.config.img_channels)
-        prob_array = self.get_output([rimage, 0])[0]
+        image = image.reshape(1, self.config.img_rows, self.config.img_cols, self.config.img_channels)
+        prob_array = self.get_output([image, 0])[0]
 
         d = {}
         i = 0
@@ -92,7 +92,7 @@ class HandRecognizer(object):
         d[guess] = 100
         prob = d[guess]
 
-        if prob > 60.0:
+        if prob > 99.0:
             return self.config.output.index(guess)
         else:
             return 1
@@ -101,23 +101,23 @@ class HandRecognizer(object):
         return detector_utils.detect_objects(image, self.detection_graph, self.sess)
 
     @staticmethod
-    def draw_result(image_np, boxes, scores, score_thresh=0.2, im_width=640, im_height=480):
-        return detector_utils.draw_box_on_image(1, score_thresh, scores, boxes, im_width, im_height, image_np)
+    def draw_result(image, boxes, scores, score_thresh=0.2, im_width=640, im_height=480):
+        return detector_utils.draw_box_on_image(1, score_thresh, scores, boxes, im_width, im_height, image)
 
     def image_preprocess(self, image):
         boxes, scores = self.detect(image)
-        roi = self.draw_result(image, boxes, scores)
-        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        image = self.draw_result(image, boxes, scores)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.config.low_range, self.config.upper_range)
         erosion = cv2.erode(mask, self.config.kernel_ellipse, iterations=1)
         dilation = cv2.dilate(erosion, self.config.kernel_ellipse, iterations=1)
-        gaussianBlur = cv2.GaussianBlur(dilation, (15, 15), 1)
-        res = cv2.bitwise_and(roi, roi, mask=gaussianBlur)
-        res = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-        rx, ry = res.shape
+        gaussian_blur = cv2.GaussianBlur(dilation, (15, 15), 1)
+        image = cv2.bitwise_and(image, image, mask=gaussian_blur)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        rx, ry = image.shape
         if rx > 0 and ry > 0:
-            res = cv2.resize(res, (self.config.width, self.config.height), interpolation=cv2.INTER_CUBIC)
-        return res
+            image = cv2.resize(image, (self.config.width, self.config.height), interpolation=cv2.INTER_CUBIC)
+        return image
 
     @staticmethod
     def gesture_postprocess(retgesture):
@@ -153,7 +153,6 @@ if __name__ == '__main__':
                 retgesture = model.guess_gesture(model.image_preprocess(image_np))
                 cv2.putText(image_np, model.config.output[retgesture], (15, 40), font, 0.75, (77, 255, 9), 2)
                 detector_utils.draw_fps_on_image(None, image_np)
-                print(model.gesture_postprocess(retgesture))
                 cv2.imshow('RPS', image_np)
                 cv2.moveWindow('RPS', 0, 0)
                 if cv2.waitKey(5) & 0xFF == ord('q'):
