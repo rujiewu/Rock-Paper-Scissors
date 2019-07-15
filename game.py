@@ -1,6 +1,7 @@
 import uuid
 from enum import Enum
 from excpetion import *
+from music import music
 
 
 class PlayerType(Enum):
@@ -31,6 +32,7 @@ class Game(object):
         self.score_two = 0
         self.player_one = 0
         self.player_two = 0
+        self.music_player = music.Music()
 
     def add_player(self, is_bot=False):
         if self.player_one is 0:
