@@ -31,7 +31,7 @@ class Config(object):
               "Scissors", "Others", "Paper", "Paper", "Rock", "Scissors", "Others", "Others", "Others", "Others"]
 
 
-class HandRecognizer(object):
+class HandClassifier(object):
     def __init__(self, config=Config(), model_dir=os.path.join(os.path.dirname(__file__) + './weights/weights.hdf5')):
         self.config = config
         self.detection_graph, self.sess = detector_utils.load_inference_graph()
