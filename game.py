@@ -77,7 +77,7 @@ class Game(object):
         else:
             raise RPSException(300, 'Unable to create new player')
 
-    def score(self):
+    def play(self):
         winner = self.judge()
         if winner == 0:
             pass

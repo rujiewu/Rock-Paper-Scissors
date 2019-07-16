@@ -28,7 +28,7 @@ def master_game():
     counter = 0
     while(True):
         time.sleep(3)
-        game_master.game.score()
+        game_master.game.play()
         print('round: ' + str(counter))
         print('p1: ' + str(game_master.game.player_one.score))
         print('p2: ' + str(game_master.game.player_two.score))
