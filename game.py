@@ -79,7 +79,9 @@ class Game(object):
 
     def score(self):
         winner = self.judge()
-        if winner == 1:
+        if winner == 0:
+            pass
+        elif winner == 1:
             self.player_one.score += 1
         elif winner == 2:
             self.player_two.score += 1

@@ -1,4 +1,5 @@
 import uuid
+import time
 from excpetion import RPSException
 from game import Game
 
@@ -21,10 +22,17 @@ class Master(object):
         self.game = None
 
 
-def crate_game():
+def master_game():
     game_master = Master()
     game_master.create_game()
-    game_master.game.judge()
+    counter = 0
+    while(True):
+        time.sleep(3)
+        game_master.game.score()
+        print('round: ' + str(counter))
+        print('p1: ' + str(game_master.game.player_one.score))
+        print('p2: ' + str(game_master.game.player_two.score))
+        counter += 1
 
 
-crate_game()
+master_game()
