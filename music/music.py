@@ -1,4 +1,5 @@
 import pygame
+import os
 
 
 class Music(object):
@@ -10,11 +11,11 @@ class Music(object):
     @staticmethod
     def play(music=0):
         if music == 0:
-            pygame.mixer.music.load("begin.mp3")
+            pygame.mixer.music.load(os.path.join(os.path.dirname(__file__)) + '\\begin.mp3')
         elif music == 1:
-            pygame.mixer.music.load("win.mp3")
+            pygame.mixer.music.load(os.path.join(os.path.dirname(__file__)) + '\\win.mp3')
         elif music == 2:
-            pygame.mixer.music.load("lose.mp3")
+            pygame.mixer.music.load(os.path.join(os.path.dirname(__file__)) + '\\lose.mp3')
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)

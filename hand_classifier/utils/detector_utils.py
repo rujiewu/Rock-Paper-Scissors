@@ -14,7 +14,7 @@ sys.path.append("..")
 # score threshold for showing bounding boxes.
 _score_thresh = 0.27
 
-MODEL_NAME = 'weights'
+MODEL_NAME = os.path.join(os.path.dirname(os.path.dirname(__file__)) + '\weights')
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
 PATH_TO_CKPT = MODEL_NAME + '/ckpt.pb'
 # List of the strings that is used to add correct label for each box.

@@ -2,7 +2,7 @@ import uuid
 from enum import Enum
 from excpetion import *
 from music import music
-from hand_classifier import algorithm
+import hand_classifier
 import random
 
 
@@ -36,7 +36,7 @@ class BotController(Controller):
 class HumanController(Controller):
     def __init__(self):
         super().__init__()
-        self.controller = algorithm.HandClassifier()
+        self.controller = hand_classifier.model()
 
     def action(self):
         return RPScy(random.randint(1, 3))
@@ -90,7 +90,9 @@ class Game(object):
     def judge(self):
         self.player_one.get_action()
         self.player_two.get_action()
-        if self.player_one.action.value not in range(1, 3) or self.player_two.action.value not in range(1, 3):
+        # The range of possible action value shall be range(1,4)
+        # As range(1,3) only contains (1,2).
+        if self.player_one.action.value not in range(1, 4) or self.player_two.action.value not in range(1, 4):
             raise RPSException(500, 'Illegal action status')
         if self.player_one.action == self.player_two.action:
             return 0

@@ -15,7 +15,7 @@ from hand_classifier import algorithm
 
 K.set_image_dim_ordering('tf')
 
-model = algorithm.HandRecognizer()
+model = algorithm.HandClassifier()
 
 
 def detect(image):

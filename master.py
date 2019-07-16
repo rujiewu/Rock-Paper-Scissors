@@ -12,7 +12,7 @@ class Master(object):
         self.game = Game()
         self.game.music_player.play()
         self.game.add_player(is_bot=True)
-        self.game.add_player()
+        self.game.add_player(True)
 
     def add_player(self, is_bot=False):
         self.game.add_player(is_bot)
@@ -23,3 +23,8 @@ class Master(object):
 
 def crate_game():
     game_master = Master()
+    game_master.create_game()
+    game_master.game.judge()
+
+
+crate_game()
